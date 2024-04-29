@@ -1,0 +1,74 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Inventario - Productos{% endblock title %}
+
+{% block main %}
+<div class="container">
+  <div class="table-responsive">
+    <table class="table caption-top">
+      <caption>Listado de Productos</caption>
+      <thead>
+        <tr>
+          <th scope="col">Fecha creación</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Descripción</th>
+          <th scope="col">Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for producto in productos_inventario %}
+        <tr>
+          <th scope="row">{{ producto.creado|date:"D d M Y" }}</th>
+          <td><a href="{{ producto.get_absolute_url }}">{{ producto.nombre }}</a></td>
+          {% if producto.descripcion %}
+          <td>{{ producto.descripcion}}</td>
+          {% else %}
+          <td>Loremp Ipsum,Loremp Ipsum,Loremp Ipsum,Loremp Ipsum</td>
+          {% endif %}
+          <td><span id={{ producto.pk}} class="badge text-bg-primary rounded-pill">{{ producto.cantidad }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if productos_inventario %}{% include "core/pagination.html" with page=productos_inventario %}{% endif %}
+    <!-- end pagination -->
+  </div>
+</div>
+{% endblock main %}
+{% block javascript %}
+<script>
+   const params = new URLSearchParams(window.location.search);
+   //console.log(params.get('page'))
+
+   if (params.has('page')) {
+       const inventarioSocket = new WebSocket(
+           'ws://'
+           + window.location.host
+           + '/ws/productos/'
+           + params.get('page')
+           + '/'
+       );
+       inventarioSocket.onmessage = function(e) {
+           const data = JSON.parse(e.data);
+           console.log(data)
+           document.querySelector('[id="' + data.producto_id + '"]').textContent = data.message;
+       };
+   } else {
+       const inventarioSocket = new WebSocket(
+           'ws://'
+           + window.location.host
+           + '/ws/productos/'
+       );
+       inventarioSocket.onmessage = function(e) {
+           const data = JSON.parse(e.data);
+           console.log(data)
+           if (document.querySelector('[id="' + data.producto_id + '"]')) {
+               document.querySelector('[id="' + data.producto_id + '"]').textContent = data.message;
+           }
+       };
+   }
+</script>
+{% endblock javascript %}

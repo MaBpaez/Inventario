@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Detalles {{producto.nombre}}{% endblock title %}
+
+{% block main %}
+<div class="container">
+  <ul class="list-group">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      {{ producto.nombre }}
+      <span class="badge text-bg-primary rounded-pill">{{ producto.cantidad }}</span>
+    </li>
+  </ul>
+  <p>
+    {{ producto.slug|json_script:"nombre-producto" }}
+  </p>
+</div>
+{% endblock main %}
+
+{% block javascript %}
+<script>
+   const NombreProducto = JSON.parse(document.getElementById('nombre-producto').textContent);
+
+   const inventarioSocket = new WebSocket(
+       'ws://'
+       + window.location.host
+       + '/ws/productos/'
+       + NombreProducto
+       + '/'
+   );
+
+   inventarioSocket.onmessage = function(e) {
+       const data = JSON.parse(e.data);
+       document.querySelector('.badge').textContent = data.message;
+    };
+</script>
+{% endblock javascript %}
